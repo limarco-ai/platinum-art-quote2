@@ -9,6 +9,7 @@ Once deployed, the website does the following.
   - They sign in once with Google.
   - WhatsApp opens with their details, a reference number and a link to their PDF.
   - A **PDF of the guide price and mockup** is emailed to the client *and* to Annie.
+- **Photo reading** (optional): the client uploads a photo of a design they like and a vision model fills the form in with its best guess — piece, design, metal, stone, carat, setting — labelled by how confident it was. They correct anything that is wrong.
 - **AI preview** (optional): a tab beside the 3D mockup that redraws the piece as a photograph. It is generated *from* the 3D mockup, so it follows the design rather than inventing one, and it is labelled "AI illustration - not the finished piece". Off until a key is set.
 - **Quotation (PDF)**: a button on the quote page saves the client a one-page sheet — the labelled drawing of their piece, the full specification, their guide price and what happens next. Nothing internal is on it. Clients without sign-in attach it to their WhatsApp message themselves.
 - **My orders** (`/account.html`):
@@ -152,13 +153,15 @@ Gmail allows about 500 emails a day, which is plenty. If Annie ever changes her 
 | `FPS_NAME` | Name shown in the payer's banking app, e.g. `Platinum Art Jewelry` |
 | `PAYPAL_ME` | Your PayPal.me name, e.g. `platinumartjewelry` (leave out to hide PayPal) |
 | `PAYME_LINK` | Optional default PayMe link |
-| `ANTHROPIC_API_KEY` | Optional, for photo reading |
+| `ANTHROPIC_API_KEY` | Optional, photo reading — only if you have one; the Anthropic API does not serve Hong Kong, and `QWEN_API_KEY` does the same job |
 | `ANTHROPIC_MODEL` | Optional; a current Claude model that reads images (defaults to `claude-sonnet-4-5`) |
 | `QWEN_API_KEY` | Optional, AI preview — Alibaba Cloud Model Studio key (**Singapore** region) |
 | `QWEN_ENDPOINT` | Optional; defaults to `https://dashscope-intl.aliyuncs.com` |
 | `QWEN_IMAGE_MODEL` | Optional; defaults to `qwen-image-edit` |
+| `QWEN_VISION_MODEL` | Optional; defaults to `qwen-vl-max` (photo reading) |
 | `OPENROUTER_API_KEY` | Optional, AI preview — used only if `QWEN_API_KEY` is not set |
 | `OPENROUTER_IMAGE_MODEL` | Optional; defaults to `bytedance/seedream-4-5` |
+| `OPENROUTER_VISION_MODEL` | Optional; defaults to `qwen/qwen2.5-vl-72b-instruct` (photo reading) |
 | `AI_IMAGE_DAILY_CAP` | Optional; images per day before the preview politely declines (default 50) |
 
 ### 6b. The AI preview (optional)
@@ -170,7 +173,7 @@ Pick one provider:
 - **Alibaba Cloud Model Studio (recommended)** — `qwen-image-edit` is built for editing an image you supply. Sign up at alibabacloud.com, open **Model Studio**, switch the console to the **Singapore** region (Singapore and Beijing keys are not interchangeable), create an API key and put it in `QWEN_API_KEY`. Open to Hong Kong businesses. About US$0.03 an image.
 - **OpenRouter** — one key for ByteDance Seedream, Google Nano Banana and OpenAI GPT Image. Put it in `OPENROUTER_API_KEY` and optionally set `OPENROUTER_IMAGE_MODEL`. Seedream is about US$0.035-0.04 a flat rate per image. Note that some Hong Kong users report OpenRouter blocking the Google and OpenAI models by billing address; Seedream is not affected.
 
-Then set `aiPreview: true` in `site-config.js`. Costs stay small on their own: every picture is cached against the exact specification, so one design is one image however many times it is viewed, and `AI_IMAGE_DAILY_CAP` stops a strange day becoming a bill.
+**One key switches on two features.** The same `QWEN_API_KEY` (or `OPENROUTER_API_KEY`) also powers **photo reading**: a client uploads a photo of a design they like and the form fills itself in with a best guess, which they then correct. Nothing else to set — the page asks `/api/capabilities` what this deployment has keys for, so both features appear on their own as soon as the key is saved and the site redeploys. The `photoReading` and `aiPreview` flags in `site-config.js` are only a fallback for deploys without that endpoint. Costs stay small on their own: every picture is cached against the exact specification, so one design is one image however many times it is viewed, and `AI_IMAGE_DAILY_CAP` stops a strange day becoming a bill.
 
 **Before you turn it on for clients**, generate half a dozen across different designs and check the piece is right. The preview never goes on the work order or the quote PDF, and it is always labelled as an illustration.
 
