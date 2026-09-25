@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My orders · Platinum Art Jewelry</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Marcellus&display=swap">
+<script src="site-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js"></script>
+<script src="js/site-auth.js"></script>
+<script src="js/fps.js"></script>
+<style>
+:root{
+  --ground:#F2F3F1; --surface:#FFFFFF; --sunken:#E8EBE8; --line:#D5DAD6; --ink:#17201D; --muted:#5E6A65;
+  --accent:#0E6A4E; --accent-ink:#FFFFFF; --accent-soft:#DDEEE7; --gold:#9C7A45; --warn:#9A5B12; --good:#1D7A46;
+  --radius:10px;
+  --display:"Marcellus", "Cormorant", Georgia, serif;
+  --body:"Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1412; --surface:#171E1B; --sunken:#1F2824; --line:#2E3A35; --ink:#E6ECE9; --muted:#9AA7A1;
+    --accent:#4CC095; --accent-ink:#06140F; --accent-soft:#16352A; --gold:#CDA96E; --warn:#E0A357; --good:#5BCB87;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1412; --surface:#171E1B; --sunken:#1F2824; --line:#2E3A35; --ink:#E6ECE9; --muted:#9AA7A1;
+  --accent:#4CC095; --accent-ink:#06140F; --accent-soft:#16352A; --gold:#CDA96E; --warn:#E0A357; --good:#5BCB87;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button:disabled{opacity:.45;cursor:not-allowed}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding:0 16px}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.1}
+h2{font-size:22px}
+h3{font-size:17px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;letter-spacing:.02em}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:6px 8px}
+button.ghost:hover{color:var(--ink)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border-radius:999px;padding:7px 13px;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.parcel{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--ink);display:inline-grid;grid-auto-flow:row;background:var(--surface)}
+.parcel span{padding:2px 8px;border-top:1px solid var(--ink);text-align:center}
+.parcel span:first-child{border-top:0;font-weight:700}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+.wrap{max-width:860px}
+.mast{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.mark{font-family:var(--display);letter-spacing:.28em;text-transform:uppercase;font-size:14px;color:var(--ink);text-decoration:none}
+.mark b{font-weight:400;color:var(--gold)}
+.me{display:flex;align-items:center;gap:10px;font-size:14px}
+.av{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:12px;font-weight:600;overflow:hidden;flex:none}
+.av img{width:100%;height:100%;object-fit:cover}
+.hello{padding:28px 0 8px}
+.hello p{color:var(--muted);margin:8px 0 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:16px}
+.order-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.order-h h2{font-size:21px}
+.ref{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.price{font-family:var(--display);font-size:20px;text-align:right}
+.price small{display:block;font-family:var(--sans);font-size:12px;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin:18px 0 6px}
+.steps .s{display:grid;justify-items:center;gap:6px;text-align:center;font-size:10.5px;color:var(--muted);line-height:1.2}
+.steps .dot{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;background:var(--surface)}
+.steps .dot svg{width:14px;height:14px}
+.steps .s.done .dot{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.steps .s.now .dot{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);color:var(--accent)}
+.steps .s.now{color:var(--ink);font-weight:500}
+@media (max-width:620px){.steps{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:12px}}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:14px}
+@media (max-width:700px){.row2{grid-template-columns:1fr}}
+.sub-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.timeline li{display:grid;grid-template-columns:10px 1fr;gap:10px;font-size:14px}
+.timeline li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:6px}
+.timeline time{display:block;font-size:12px;color:var(--muted)}
+.inv{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+.inv + .inv{margin-top:10px}
+.inv-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.inv-h strong{font-family:var(--display);font-size:22px;font-weight:400}
+.badge{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.badge.paid{background:var(--accent-soft);color:var(--accent)}
+.badge.due{background:#F6E9D5;color:var(--warn)}
+.pay{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pay a,.pay button{display:grid;justify-items:center;gap:4px;padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);text-decoration:none;color:var(--ink);font-size:12.5px;text-align:center}
+.pay a[aria-pressed="true"],.pay button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.pay svg{width:38px;height:24px}
+.fps{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center;background:var(--sunken);border-radius:10px;padding:12px}
+.fps .qr{background:#fff;border-radius:8px;padding:8px;line-height:0}
+.fps .qr svg{width:100%;height:auto}
+.fps dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13px}
+.fps dt{color:var(--muted)}
+.fps dd{margin:0;font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+@media (max-width:520px){.fps{grid-template-columns:1fr}.fps .qr{max-width:200px}}
+.paid-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+@media (max-width:520px){.paid-form{grid-template-columns:1fr}}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty svg{width:64px;height:64px;color:var(--gold);margin-bottom:10px}
+.signin{max-width:420px;margin:40px auto;text-align:center}
+.gbtn{display:inline-flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;font-size:15px;font-weight:500;background:var(--surface);border:1px solid var(--ink)}
+.demo{background:#F6E9D5;color:var(--warn);font-size:13px;padding:8px 12px;border-radius:10px;margin-top:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);background:var(--ink);color:var(--ground);padding:9px 16px;border-radius:999px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mast">
+    <a class="mark" href="./">Platinum <b>Art</b> Jewelry</a>
+    <div class="me" id="me"></div>
+  </div>
+  <div id="app"><p class="muted" style="padding:30px 0">Loading…</p></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const { esc, hk } = PA;
+const DEMO = new URLSearchParams(location.search).has("demo") || !PA.enabled;
+function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2200); }
+const fmtDate = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Hong_Kong" });
+
+const STEP_ICON = {
+  enquiry: '<path d="M4 5h16v11H9l-5 4z"/>',
+  quoted: '<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/>',
+  deposit_paid: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>',
+  design_approved: '<path d="M5 12l4 4 10-10"/>',
+  in_production: '<path d="M14 4l6 6-9 9H5v-6z"/>',
+  ready: '<path d="M4 9h16v11H4zM4 9l2-5h12l2 5M12 9v11"/>',
+  delivered: '<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>',
+  paid: '<path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8z"/>',
+};
+const icon = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${STEP_ICON[k] || ""}</svg>`;
+const PAY_ICON = {
+  fps: '<svg viewBox="0 0 38 24"><rect x="1" y="1" width="36" height="22" rx="4" fill="#E8F1FB" stroke="#2A6EBB"/><text x="19" y="16" font-family="Helvetica,Arial" font-weight="700" font-size="10" text-anchor="middle" fill="#2A6EBB">FPS</text></svg>',
+  payme: '<svg viewBox="0 0 38 24"><rect x="1" y="1" width="36" height="22" rx="4" fill="#DB0011"/><text x="19" y="16" font-family="Helvetica,Arial" font-weight="700" font-size="9" text-anchor="middle" fill="#fff">PayMe</text></svg>',
+  paypal: '<svg viewBox="0 0 38 24"><rect x="1" y="1" width="36" height="22" rx="4" fill="#fff" stroke="#003087"/><text x="19" y="16" font-family="Helvetica,Arial" font-weight="700" font-style="italic" font-size="9" text-anchor="middle" fill="#003087">PayPal</text></svg>',
+};
+
+/* ---------- data ---------- */
+const demoData = () => {
+  const now = Date.now(), d = (days) => new Date(now - days * 864e5).toISOString();
+  return [{
+    id: "o1", ref: "PA-260902-K7M", title: "Classic ring · Three-stone", stage: "delivered", final_price: 742600, currency: "HKD", created_at: d(14), updated_at: d(1),
+    quotes: { ref: "PA-260902-K7M", guide_low: 740000, guide_high: 900000, currency: "HKD", pdf_path: null },
+    order_updates: [
+      { id: "u1", message: "Enquiry received — Annie will be in touch to go through the details.", created_at: d(14), stage: "enquiry" },
+      { id: "u2", message: "Your emerald (4.32ct, Colombian, minor oil) is reserved. Final price HK$742,600 with trapezoid side stones.", created_at: d(12), stage: "quoted" },
+      { id: "u3", message: "Wax model approved — casting this week.", created_at: d(8), stage: "in_production" },
+      { id: "u4", message: "Delivered — thank you! Balance request below.", created_at: d(1), stage: "delivered" },
+    ],
+    invoices: [
+      { id: "i1", ref: "INV-260904-D2Q", kind: "deposit", amount: 200000, currency: "HKD", status: "paid", created_at: d(11), paid_at: d(10), paid_method: "FPS" },
+      { id: "i2", ref: "INV-260915-B8R", kind: "balance", amount: 542600, currency: "HKD", status: "sent", due_date: d(-7).slice(0, 10), created_at: d(1),
+        paypal_url: "https://paypal.me/platinumartjewelry/542600HKD", payme_url: "https://payme.hsbc/platinumart",
+        fps_payload: FPS.payload({ mobile: "+852-91234567", amount: 542600, reference: "INV-260915-B8R", name: "Platinum Art Jewelry" }), fps_display: "FPS mobile +852-91234567" },
+    ],
+  }];
+};
+
+async function loadOrders() {
+  if (DEMO) return demoData();
+  const { data, error } = await PA.sb.from("orders")
+    .select("id,ref,title,stage,final_price,currency,created_at,updated_at,quotes(ref,guide_low,guide_high,currency,pdf_path),order_updates(id,message,stage,created_at,created_by),invoices(*)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+/* ---------- render ---------- */
+async function renderMe(u) {
+  $("me").innerHTML = u ? `<span class="av">${u.avatar ? `<img src="${esc(u.avatar)}" alt="" referrerpolicy="no-referrer">` : esc(PA.initials(u.name))}</span><button type="button" id="out">Sign out</button>` : "";
+  if (u) $("out").onclick = async () => { if (!DEMO) await PA.signOut(); location.href = "./"; };
+}
+
+function stepper(stage) {
+  if (stage === "cancelled") return `<p class="badge" style="display:inline-block;margin-top:14px">Cancelled</p>`;
+  const i = PA.STAGES.findIndex(([k]) => k === stage);
+  return `<div class="steps" role="list">${PA.STAGES.map(([k, label], j) => `<div class="s ${j < i || (j === i && k === "paid") ? "done" : j === i ? "now" : ""}" role="listitem" aria-current="${j === i ? "step" : "false"}"><span class="dot">${icon(k)}</span>${label}</div>`).join("")}</div>`;
+}
+
+function invoiceCard(inv) {
+  const status = inv.status === "paid" ? `<span class="badge paid">Paid</span>` : inv.status === "client_says_paid" ? `<span class="badge">Checking payment</span>` : inv.status === "cancelled" ? `<span class="badge">Cancelled</span>` : `<span class="badge due">${inv.due_date ? "Due " + fmtDate(inv.due_date) : "To pay"}</span>`;
+  const kind = { deposit: "Deposit", balance: "Balance", full: "Payment" }[inv.kind] || "Payment";
+  const open = inv.status === "sent";
+  const methods = [
+    inv.fps_payload ? `<button type="button" data-m="fps" aria-pressed="true">${PAY_ICON.fps}FPS</button>` : "",
+    inv.payme_url ? `<a href="${esc(inv.payme_url)}" target="_blank" rel="noopener" data-m="payme">${PAY_ICON.payme}PayMe</a>` : "",
+    inv.paypal_url ? `<a href="${esc(inv.paypal_url)}" target="_blank" rel="noopener" data-m="paypal">${PAY_ICON.paypal}PayPal</a>` : "",
+  ].join("");
+  return `<div class="inv" id="${esc(inv.id)}">
+    <div class="inv-h"><div><div class="ref">${esc(kind)} · ${esc(inv.ref)}</div><strong class="num">${hk(inv.amount, inv.currency)}</strong></div>${status}</div>
+    ${open && methods ? `<div class="pay">${methods}</div>` : ""}
+    ${open && inv.fps_payload ? `<div class="fps"><div class="qr" data-qr="${esc(inv.fps_payload)}"></div>
+      <div><p style="margin:0 0 8px;font-size:13px">Scan with any Hong Kong banking app, or pay by FPS manually:</p>
+      <dl><dt>To</dt><dd>${esc(inv.fps_display || "")}</dd><dt>Amount</dt><dd>${hk(inv.amount, inv.currency)}</dd><dt>Reference</dt><dd>${esc(inv.ref)}</dd></dl></div></div>` : ""}
+    ${open ? `<form class="paid-form" data-inv="${esc(inv.id)}">
+      <div><label>Paid with</label><select name="method"><option>FPS</option><option>PayMe</option><option>PayPal</option><option>Bank transfer</option></select></div>
+      <div><label>Payment reference (optional)</label><input name="reference" maxlength="60"></div>
+      <button type="submit">I've paid</button></form>` : inv.paid_at ? `<p class="muted" style="margin:0;font-size:13px">Paid ${fmtDate(inv.paid_at)}${inv.paid_method ? " by " + esc(inv.paid_method) : ""}</p>` : ""}
+  </div>`;
+}
+
+function orderCard(o) {
+  const q = o.quotes || {};
+  const updates = (o.order_updates || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const invoices = (o.invoices || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const price = o.final_price ? `${hk(o.final_price, o.currency)}<small>confirmed price</small>` : q.guide_low ? `${hk(q.guide_low, q.currency)} – ${hk(q.guide_high, q.currency).replace(/^HK\$/, "")}<small>guide price</small>` : "";
+  return `<article class="card" id="order-${esc(o.id)}">
+    <div class="order-h"><div><div class="ref">${esc(o.ref)} · ${fmtDate(o.created_at)}</div><h2>${esc(o.title || "Your piece")}</h2></div><div class="price num">${price}</div></div>
+    ${stepper(o.stage)}
+    <div class="row2">
+      <div><p class="sub-h">Updates from Annie</p><ul class="timeline">${updates.map(u => `<li><div>${esc(u.message)}<time>${fmtDate(u.created_at)}</time></div></li>`).join("") || `<li><div class="muted">No updates yet.</div></li>`}</ul>
+        ${q.pdf_path || DEMO ? `<p style="margin-top:14px"><button type="button" data-pdf="${esc(q.pdf_path || "")}">Open guide-price PDF</button></p>` : ""}</div>
+      <div><p class="sub-h">Payments</p>${invoices.map(invoiceCard).join("") || `<p class="muted" style="font-size:14px;margin:0">Nothing to pay yet — Annie sends a payment request here when it's due.</p>`}</div>
+    </div>
+  </article>`;
+}
+
+async function render() {
+  const u = DEMO ? { name: "Demo Client", email: "client@example.com", avatar: "" } : await PA.user();
+  renderMe(u);
+  if (!u) {
+    $("app").innerHTML = `<div class="signin card"><h1 style="font-size:28px">My orders</h1><p class="muted">Sign in to see your quotes, follow your piece being made, and pay when it's ready.</p>
+      <button type="button" class="gbtn" id="g">${PA.GOOGLE_SVG}Continue with Google</button></div>`;
+    $("g").onclick = () => PA.signIn(location.href.split("#")[0]);
+    return;
+  }
+  let orders;
+  try { orders = await loadOrders(); }
+  catch (e) { console.error(e); $("app").innerHTML = `<div class="card">Couldn't load your orders just now. Please refresh in a moment.</div>`; return; }
+  $("app").innerHTML = `${DEMO ? `<div class="demo">Demo view with sample data — ${PA.enabled ? "remove ?demo from the address to see your real orders" : "sign-in isn't set up on this site yet"}.</div>` : ""}
+    <section class="hello"><h1 style="font-size:32px">Hi ${esc(String(u.name).split(" ")[0])}</h1><p>Your pieces with Platinum Art Jewelry.</p></section>
+    ${orders.length ? orders.map(orderCard).join("") : `<div class="card empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 9l3-4h6l3 4-6 11z"/><path d="M6 9h12"/></svg><p>No pieces yet.</p><p><a class="primary" href="./">Get a guide price</a></p></div>`}`;
+
+  document.querySelectorAll("[data-qr]").forEach(el => {
+    try { const q = qrcode(0, "M"); q.addData(el.dataset.qr); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); }
+    catch (_) { el.textContent = "QR unavailable"; }
+  });
+  document.querySelectorAll("[data-pdf]").forEach(b => b.onclick = async () => {
+    if (DEMO) { toast("In the live site this opens your PDF"); return; }
+    const w = window.open("", "_blank");
+    const { data, error } = await PA.sb.storage.from("quotes").createSignedUrl(b.dataset.pdf, 3600);
+    if (error || !data) { if (w) w.close(); toast("Couldn't open the PDF"); return; }
+    if (w) w.location.href = data.signedUrl; else location.href = data.signedUrl;
+  });
+  document.querySelectorAll(".paid-form").forEach(f => f.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const fd = new FormData(f);
+    f.querySelector("button").disabled = true;
+    if (!DEMO) {
+      const { error } = await PA.sb.rpc("client_mark_paid", { invoice: f.dataset.inv, method: fd.get("method"), reference: fd.get("reference") || null });
+      if (error) { toast("Couldn't send that — please message Annie"); f.querySelector("button").disabled = false; return; }
+    }
+    toast("Thanks — Annie will confirm your payment");
+    if (!DEMO) render(); else f.outerHTML = `<p class="muted" style="margin:0;font-size:13px">Thanks — Annie will confirm your payment.</p>`;
+  });
+  if (location.hash) { const el = document.getElementById(location.hash.slice(1)) || document.getElementById("order-" + location.hash.slice(1)); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+}
+
+if (PA.enabled && !DEMO) PA.onChange((ev) => {}); // keeps the session fresh
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clients & orders · Platinum Art Jewelry</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Marcellus&display=swap">
+<script src="site-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js"></script>
+<script src="js/site-auth.js"></script>
+<script src="js/fps.js"></script>
+<style>
+:root{
+  --ground:#F2F3F1; --surface:#FFFFFF; --sunken:#E8EBE8; --line:#D5DAD6; --ink:#17201D; --muted:#5E6A65;
+  --accent:#0E6A4E; --accent-ink:#FFFFFF; --accent-soft:#DDEEE7; --gold:#9C7A45; --warn:#9A5B12; --good:#1D7A46;
+  --radius:10px;
+  --display:"Marcellus", "Cormorant", Georgia, serif;
+  --body:"Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1412; --surface:#171E1B; --sunken:#1F2824; --line:#2E3A35; --ink:#E6ECE9; --muted:#9AA7A1;
+    --accent:#4CC095; --accent-ink:#06140F; --accent-soft:#16352A; --gold:#CDA96E; --warn:#E0A357; --good:#5BCB87;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1412; --surface:#171E1B; --sunken:#1F2824; --line:#2E3A35; --ink:#E6ECE9; --muted:#9AA7A1;
+  --accent:#4CC095; --accent-ink:#06140F; --accent-soft:#16352A; --gold:#CDA96E; --warn:#E0A357; --good:#5BCB87;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button:disabled{opacity:.45;cursor:not-allowed}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding:0 16px}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.1}
+h2{font-size:22px}
+h3{font-size:17px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;letter-spacing:.02em}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:6px 8px}
+button.ghost:hover{color:var(--ink)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border-radius:999px;padding:7px 13px;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.parcel{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--ink);display:inline-grid;grid-auto-flow:row;background:var(--surface)}
+.parcel span{padding:2px 8px;border-top:1px solid var(--ink);text-align:center}
+.parcel span:first-child{border-top:0;font-weight:700}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+.wrap{max-width:1240px}
+.mast{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.mark{font-family:var(--display);letter-spacing:.28em;text-transform:uppercase;font-size:14px;color:var(--ink);text-decoration:none}
+.mark b{font-weight:400;color:var(--gold)}
+.mark span{font-family:var(--mono);letter-spacing:.1em;font-size:11px;color:var(--muted);margin-left:10px}
+.me{display:flex;align-items:center;gap:10px;font-size:14px}
+.av{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:600;overflow:hidden;flex:none}
+.av img{width:100%;height:100%;object-fit:cover}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin:18px 0}
+.stat{display:grid;gap:4px;justify-items:start;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);text-align:left;color:var(--ink)}
+.stat svg{width:20px;height:20px;color:var(--gold)}
+.stat b{font-family:var(--display);font-weight:400;font-size:24px;line-height:1}
+.stat small{font-size:11.5px;color:var(--muted)}
+.stat[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--sunken)}
+.stat.money b{font-size:19px}
+.crm{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.crm{grid-template-columns:1fr}.crm.open .list{display:none}.crm:not(.open) .detail{display:none}}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.list .search{padding:10px;border-bottom:1px solid var(--line)}
+.item{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:12px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;text-align:left;color:var(--ink)}
+.item:last-child{border-bottom:0}
+.item[aria-current="true"]{background:var(--sunken)}
+.item .t,.item .s{display:block}
+.item .t{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .r{text-align:right;font-size:12.5px}
+.badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.badge.go{background:var(--accent-soft);color:var(--accent)}
+.badge.warn{background:#F6E9D5;color:var(--warn)}
+.detail{display:grid;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font-size:22px}
+.card h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:400}
+.head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.ref{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.contact{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.contact a{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);text-decoration:none;color:var(--ink);background:var(--surface)}
+.contact svg{width:15px;height:15px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:1100px){.two{grid-template-columns:1fr}}
+.summary{white-space:pre-wrap;font-size:13.5px;color:var(--muted);background:var(--sunken);border-radius:10px;padding:12px;margin:0}
+.stage-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.stage-pick button{display:grid;justify-items:center;gap:4px;padding:8px 4px;border-radius:10px;font-size:11.5px;line-height:1.15;text-align:center}
+.stage-pick svg{width:18px;height:18px}
+.stage-pick button[aria-pressed="true"]{background:var(--sunken);border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.tpl{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tpl button{font-size:12px;padding:4px 10px;border-radius:999px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+textarea{min-height:76px;resize:vertical}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:320px;overflow:auto}
+.timeline li{display:grid;grid-template-columns:10px 1fr;gap:10px;font-size:13.5px}
+.timeline li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:6px}
+.timeline li.client::before{background:var(--accent)}
+.timeline time{display:block;font-size:11.5px;color:var(--muted)}
+.inv{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.inv + .inv{margin-top:8px}
+.inv strong{font-family:var(--display);font-weight:400;font-size:19px}
+.inv .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.inv .acts button{font-size:12.5px;padding:6px 10px}
+.kind{display:flex;gap:6px}
+.kind button{flex:1;display:grid;justify-items:center;gap:3px;padding:8px;border-radius:10px;font-size:12px}
+.kind button[aria-pressed="true"]{background:var(--sunken);border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.kind svg{width:20px;height:20px}
+.qrprev{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;margin-top:10px;background:var(--sunken);border-radius:10px;padding:10px}
+.qrprev .qr{background:#fff;border-radius:6px;padding:6px;line-height:0}
+.qrprev .qr svg{width:100%;height:auto}
+.notes{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}
+.notes li{font-size:13.5px;background:#FBF6EC;border:1px solid #EADFC8;border-radius:10px;padding:8px 10px;color:#4A3B22}
+.notes time{display:block;font-size:11px;color:#8A7652}
+.demo{background:#F6E9D5;color:var(--warn);font-size:13px;padding:8px 12px;border-radius:10px;margin-top:14px}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.empty svg{width:44px;height:44px;color:var(--gold)}
+.back{display:none}
+@media (max-width:900px){.back{display:inline-flex}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);background:var(--ink);color:var(--ground);padding:9px 16px;border-radius:999px;font-size:14px;z-index:9}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mast">
+    <a class="mark" href="admin.html">Platinum <b>Art</b> Jewelry<span>CRM</span></a>
+    <div class="me" id="me"></div>
+  </div>
+  <div id="app"><p class="muted" style="padding:30px 0">Loading…</p></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const { esc, hk } = PA;
+const DEMO = new URLSearchParams(location.search).has("demo") || !PA.enabled;
+function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2400); }
+const fmt = (d) => new Date(d).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Hong_Kong" });
+const day = (d) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Hong_Kong" });
+const I = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON = {
+  enquiry: I('<path d="M4 5h16v11H9l-5 4z"/>'), quoted: I('<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/>'),
+  deposit_paid: I('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>'), design_approved: I('<path d="M5 12l4 4 10-10"/>'),
+  in_production: I('<path d="M14 4l6 6-9 9H5v-6z"/>'), ready: I('<path d="M4 9h16v11H4zM4 9l2-5h12l2 5M12 9v11"/>'),
+  delivered: I('<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>'),
+  paid: I('<path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8z"/>'), cancelled: I('<circle cx="12" cy="12" r="9"/><path d="M8 8l8 8"/>'),
+  all: I('<path d="M4 6h16M4 12h16M4 18h16"/>'), money: I('<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>'),
+  wa: I('<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8c-1-.5-1.8-1.3-2.3-2.3l.8-1-1-2z"/>'),
+  mail: I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'), pdf: I('<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v4h4"/>'),
+  deposit: I('<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 20h16"/>'), balance: I('<path d="M12 3v18M5 8h14M5 8l-2 6h4zM19 8l-2 6h4z"/>'), full: I('<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>'),
+};
+const STAGE_LIST = [...PA.STAGES, ["cancelled", "Cancelled"]];
+const STAGE_LABEL = Object.fromEntries(STAGE_LIST);
+const TEMPLATES = {
+  enquiry: ["Thanks for your enquiry — I'll message you on WhatsApp to go through stones and details."],
+  quoted: ["I've sourced your stones — confirmed price is below. Reply to go ahead and I'll send the deposit request."],
+  deposit_paid: ["Deposit received, thank you! I'm preparing the design drawings now."],
+  design_approved: ["Design approved — sending to the workshop for casting."],
+  in_production: ["Your piece is being made. Stone setting next week.", "Casting is done — setting the stones now."],
+  ready: ["Your piece is ready! Let me know a good time to collect or have it delivered."],
+  delivered: ["Delivered — I hope you love it! The balance request is below."],
+  paid: ["Payment received in full. Thank you so much!"],
+  cancelled: ["As discussed, I've closed this order. Message me any time."],
+};
+
+/* ---------- data (live via Supabase, or demo) ---------- */
+let ORDERS = [], sel = null, filter = "active", q = "";
+function demoOrders() {
+  const now = Date.now(), d = (days) => new Date(now - days * 864e5).toISOString();
+  const mk = (id, ref, name, email, phone, title, stage, low, high, final, days, ups = [], invs = [], notes = []) => ({
+    id, ref, title, stage, final_price: final, currency: "HKD", created_at: d(days), updated_at: d(Math.max(0, days - 2)),
+    profiles: { full_name: name, email, phone, avatar_url: "" },
+    quotes: { ref, guide_low: low, guide_high: high, pdf_path: null, summary: `Hi Annie! I'd love a quote for a ${title.toLowerCase()}.\nMetal: 18K white gold.\nGuide price on your estimator: ${hk(low)} – ${hk(high)}.` },
+    order_updates: [{ id: id + "u0", message: "Enquiry received — Annie will be in touch to go through the details.", created_at: d(days), created_by: "annie", stage: "enquiry" }, ...ups],
+    invoices: invs, order_notes: notes,
+  });
+  return [
+    mk("o1", "PA-260915-H3K", "Chloe Wong", "chloe.w@example.com", "+852 9123 4567", "Classic ring · Three-stone", "enquiry", 740000, 900000, null, 1, [], [], []),
+    mk("o2", "PA-260910-M8P", "Daniel Leung", "dleung@example.com", "+852 6234 5678", "Delicate earrings · Halo studs", "quoted", 38000, 47000, 41200, 6,
+      [{ id: "o2u", message: "Sourced a matched pair of 0.5ct F VS1 — confirmed price HK$41,200.", created_at: d(4), created_by: "annie", stage: "quoted" }], [], [{ id: "n1", note: "Wants them before 10 Oct (anniversary). Prefers platinum posts.", created_at: d(5) }]),
+    mk("o3", "PA-260829-Q2D", "Priya Shah", "priya.s@example.com", "+852 5345 6789", "Classic pendant · Halo pendant", "in_production", 62000, 76000, 66800, 18,
+      [{ id: "o3u1", message: "Deposit received, thank you!", created_at: d(15), created_by: "annie", stage: "deposit_paid" }, { id: "o3u2", message: "Casting is done — setting the stones now.", created_at: d(3), created_by: "annie", stage: "in_production" }],
+      [{ id: "i31", ref: "INV-260831-T6J", kind: "deposit", amount: 20000, currency: "HKD", status: "paid", paid_at: d(15), paid_method: "FPS", created_at: d(16) }]),
+    mk("o4", "PA-260902-K7M", "Emma Chan", "emma.chan@example.com", "+852 9456 7890", "Classic ring · Three-stone", "delivered", 740000, 900000, 742600, 14,
+      [{ id: "o4u", message: "Delivered — I hope you love it! The balance request is below.", created_at: d(1), created_by: "annie", stage: "delivered" },
+       { id: "o4c", message: "Client says invoice INV-260915-B8R is paid via FPS (ref 20260916-8831)", created_at: d(0.2), created_by: "client" }],
+      [{ id: "i41", ref: "INV-260904-D2Q", kind: "deposit", amount: 200000, currency: "HKD", status: "paid", paid_at: d(10), paid_method: "PayMe", created_at: d(11) },
+       { id: "i42", ref: "INV-260915-B8R", kind: "balance", amount: 542600, currency: "HKD", status: "client_says_paid", paid_method: "FPS", paid_reference: "20260916-8831", created_at: d(1),
+         fps_payload: FPS.payload({ mobile: "+852-91234567", amount: 542600, reference: "INV-260915-B8R", name: "Platinum Art Jewelry" }), fps_display: "FPS mobile +852-91234567" }]),
+    mk("o5", "PA-260720-A9C", "Grace Lau", "grace.lau@example.com", "", "Statement bangle · Pavé bangle", "paid", 120000, 146000, 128500, 58,
+      [{ id: "o5u", message: "Payment received in full. Thank you so much!", created_at: d(40), created_by: "annie", stage: "paid" }],
+      [{ id: "i51", ref: "INV-260801-P4W", kind: "full", amount: 128500, currency: "HKD", status: "paid", paid_at: d(40), paid_method: "PayPal", created_at: d(44) }]),
+  ];
+}
+async function load() {
+  if (DEMO) { ORDERS = ORDERS.length ? ORDERS : demoOrders(); return; }
+  const { data, error } = await PA.sb.from("orders")
+    .select("*,profiles(full_name,email,phone,avatar_url),quotes(ref,guide_low,guide_high,currency,pdf_path,work_order_path,summary,spec),order_updates(*),invoices(*),order_notes(*)")
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  ORDERS = data;
+}
+const act = {
+  async update(o, { stage, message, notify, finalPrice }) {
+    if (DEMO) {
+      if (stage) o.stage = stage; if (finalPrice) o.final_price = +finalPrice; o.updated_at = new Date().toISOString();
+      const text = message || (stage ? STAGE_LABEL[stage] : ""); if (text) o.order_updates.push({ id: "u" + Date.now(), message: text, stage, created_at: o.updated_at, created_by: "annie" });
+      return { emailed: notify };
+    }
+    return PA.api("/api/order-update", { orderId: o.id, stage, message, notify, finalPrice });
+  },
+  async requestPayment(o, body) {
+    if (DEMO) {
+      const ref = "INV-" + new Date().toISOString().slice(2, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 5).toUpperCase();
+      const inv = { id: "i" + Date.now(), ref, kind: body.kind, amount: +body.amount, currency: "HKD", status: "sent", due_date: body.dueDate || null, created_at: new Date().toISOString(),
+        paypal_url: `https://paypal.me/platinumartjewelry/${+body.amount}HKD`, payme_url: body.paymeUrl || "https://payme.hsbc/platinumart",
+        fps_payload: FPS.payload({ mobile: "+852-91234567", amount: +body.amount, reference: ref, name: "Platinum Art Jewelry" }), fps_display: "FPS mobile +852-91234567" };
+      o.invoices.push(inv); o.order_updates.push({ id: "u" + Date.now(), message: `${body.kind === "deposit" ? "Deposit" : "Payment"} request ${ref}: ${hk(body.amount)}.`, created_at: inv.created_at, created_by: "annie" });
+      return { invoice: inv, emailed: true };
+    }
+    return PA.api("/api/request-payment", { orderId: o.id, ...body });
+  },
+  async markPaid(o, inv, method) {
+    const patch = { status: "paid", paid_at: new Date().toISOString(), paid_method: method || inv.paid_method || null };
+    if (DEMO) { Object.assign(inv, patch); o.order_updates.push({ id: "u" + Date.now(), message: `Payment received: ${inv.ref} ${hk(inv.amount)}. Thank you!`, created_at: patch.paid_at, created_by: "annie" }); return; }
+    const { error } = await PA.sb.from("invoices").update(patch).eq("id", inv.id);
+    if (error) throw error;
+    await PA.sb.from("order_updates").insert({ order_id: o.id, message: `Payment received: ${inv.ref} ${hk(inv.amount)}. Thank you!`, created_by: "annie" });
+  },
+  async cancelInvoice(o, inv) {
+    if (DEMO) { inv.status = "cancelled"; return; }
+    const { error } = await PA.sb.from("invoices").update({ status: "cancelled" }).eq("id", inv.id); if (error) throw error;
+  },
+  async addNote(o, note) {
+    if (DEMO) { o.order_notes.push({ id: "n" + Date.now(), note, created_at: new Date().toISOString() }); return; }
+    const { error } = await PA.sb.from("order_notes").insert({ order_id: o.id, note }); if (error) throw error;
+  },
+  async pdf(o, which = "pdf_path") {
+    if (DEMO || !o.quotes?.[which]) return null;
+    const { data } = await PA.sb.storage.from("quotes").createSignedUrl(o.quotes[which], 3600);
+    return data?.signedUrl || null;
+  },
+};
+
+/* ---------- views ---------- */
+const paidOf = (o) => (o.invoices || []).filter(i => i.status === "paid").reduce((s, i) => s + +i.amount, 0);
+const openInv = (o) => (o.invoices || []).filter(i => i.status === "sent" || i.status === "client_says_paid");
+function stageBadge(stage) { return `<span class="badge ${["paid"].includes(stage) ? "go" : stage === "cancelled" ? "" : ["ready", "delivered"].includes(stage) ? "warn" : ""}">${esc(STAGE_LABEL[stage] || stage)}</span>`; }
+
+function renderStats() {
+  const count = (k) => ORDERS.filter(o => o.stage === k).length;
+  const active = ORDERS.filter(o => !["paid", "cancelled"].includes(o.stage)).length;
+  const toCollect = ORDERS.flatMap(openInv).reduce((s, i) => s + +i.amount, 0);
+  const checking = ORDERS.flatMap(o => o.invoices || []).filter(i => i.status === "client_says_paid").length;
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const paidMonth = ORDERS.flatMap(o => o.invoices || []).filter(i => i.status === "paid" && i.paid_at && new Date(i.paid_at) >= monthStart).reduce((s, i) => s + +i.amount, 0);
+  const tile = (key, icon, n, label, cls = "") => `<button type="button" class="stat ${cls}" data-f="${key}" aria-pressed="${filter === key}">${icon}<b class="num">${n}</b><small>${label}</small></button>`;
+  return `<div class="stats">
+    ${tile("active", ICON.all, active, "Active orders")}
+    ${["enquiry", "quoted", "in_production", "ready", "delivered"].map(k => tile(k, ICON[k], count(k), STAGE_LABEL[k])).join("")}
+    ${tile("collect", ICON.money, hk(toCollect), checking ? `To collect · ${checking} to check` : "To collect", "money")}
+    ${tile("paid", ICON.paid, hk(paidMonth), "Paid this month", "money")}
+  </div>`;
+}
+function visible() {
+  return ORDERS.filter(o => filter === "active" ? !["paid", "cancelled"].includes(o.stage) : filter === "collect" ? openInv(o).length : filter === "paid" ? o.stage === "paid" : o.stage === filter)
+    .filter(o => !q || [o.ref, o.title, o.profiles?.full_name, o.profiles?.email, o.profiles?.phone].join(" ").toLowerCase().includes(q));
+}
+function listHTML() {
+  const rows = visible();
+  return `<div class="search"><input id="q" type="search" placeholder="Search name, email, ref…" value="${esc(q)}" aria-label="Search orders"></div>
+    ${rows.map(o => { const p = o.profiles || {}; const flag = (o.invoices || []).some(i => i.status === "client_says_paid");
+      return `<button type="button" class="item" data-id="${esc(o.id)}" aria-current="${sel === o.id}">
+        <span class="av">${p.avatar_url ? `<img src="${esc(p.avatar_url)}" alt="" referrerpolicy="no-referrer">` : esc(PA.initials(p.full_name || p.email))}</span>
+        <span style="min-width:0"><span class="t">${esc(p.full_name || p.email || "Client")}</span><span class="s">${esc(o.title || "")} · ${esc(o.ref)}</span></span>
+        <span class="r">${flag ? `<span class="badge warn">Check payment</span>` : stageBadge(o.stage)}<br><span class="muted num">${o.final_price ? hk(o.final_price) : o.quotes?.guide_low ? hk(o.quotes.guide_low) + "+" : ""}</span></span>
+      </button>`; }).join("") || `<div class="empty">No orders here.</div>`}`;
+}
+
+function detailHTML(o) {
+  if (!o) return `<div class="card empty">${ICON.all}<p>Pick an order to see the client, send updates and request payment.</p></div>`;
+  const p = o.profiles || {}, qt = o.quotes || {};
+  const digits = String(p.phone || "").replace(/\D/g, "");
+  const ups = (o.order_updates || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const invs = (o.invoices || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const notes = (o.order_notes || []).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const total = +o.final_price || 0, paid = paidOf(o), outstanding = Math.max(0, total - paid - openInv(o).reduce((s, i) => s + +i.amount, 0));
+  const suggestKind = paid === 0 && !["delivered", "ready"].includes(o.stage) ? "deposit" : "balance";
+  const suggestAmt = suggestKind === "deposit" ? Math.round(total * 0.3 / 100) * 100 : outstanding;
+  return `
+  <button type="button" class="back" id="back">← All orders</button>
+  <div class="card">
+    <div class="head"><div><div class="ref">${esc(o.ref)} · opened ${day(o.created_at)}</div><h2>${esc(p.full_name || p.email || "Client")}</h2><div class="muted" style="font-size:14px">${esc(o.title || "")}</div></div>
+      <div style="text-align:right">${stageBadge(o.stage)}<div class="num" style="font-family:var(--display);font-size:22px;margin-top:6px">${total ? hk(total) : qt.guide_low ? `${hk(qt.guide_low)} – ${hk(qt.guide_high).replace("HK$", "")}` : ""}</div>
+      <div class="muted" style="font-size:12px">${total ? `paid ${hk(paid)}${outstanding ? " · " + hk(outstanding) + " not yet requested" : ""}` : "guide price"}</div></div></div>
+    <div class="contact">
+      ${digits ? `<a href="https://wa.me/${digits}" target="_blank" rel="noopener">${ICON.wa}WhatsApp</a>` : ""}
+      ${p.email ? `<a href="mailto:${esc(p.email)}?subject=${encodeURIComponent("Your piece · " + o.ref)}">${ICON.mail}${esc(p.email)}</a>` : ""}
+      ${qt.pdf_path || DEMO ? `<a href="#" id="pdf">${ICON.pdf}Quote PDF</a>` : ""}
+      ${qt.work_order_path || DEMO ? `<a href="#" id="wo-pdf">${ICON.pdf}Work order</a>` : ""}
+    </div>
+    ${qt.summary ? `<p class="summary" style="margin-top:12px">${esc(qt.summary)}</p>` : ""}
+  </div>
+  <div class="two">
+    <div class="card">
+      <h3>Update the client</h3>
+      <div class="stage-pick" id="stage-pick">${STAGE_LIST.map(([k, l]) => `<button type="button" data-stage="${k}" aria-pressed="${k === o.stage}">${ICON[k]}${l}</button>`).join("")}</div>
+      <div class="tpl" id="tpl"></div>
+      <label for="msg">Message</label><textarea id="msg" placeholder="What's new with their piece?"></textarea>
+      <div class="fields" style="margin-top:10px"><div><label for="final">Confirmed price HK$</label><input id="final" type="number" step="100" value="${o.final_price || ""}" class="num"></div>
+        <div><label class="check" style="margin-top:24px"><input type="checkbox" id="notify" checked> Email the client</label></div></div>
+      <p style="margin:12px 0 0"><button type="button" class="primary" id="save">Save update</button></p>
+      <h3 style="margin-top:18px">Timeline</h3>
+      <ul class="timeline">${ups.map(u => `<li class="${u.created_by === "client" ? "client" : ""}"><div>${u.created_by === "client" ? "<b>Client:</b> " : ""}${esc(u.message)}<time>${fmt(u.created_at)}${u.stage ? " · " + esc(STAGE_LABEL[u.stage] || u.stage) : ""}</time></div></li>`).join("")}</ul>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="card">
+        <h3>Payments</h3>
+        ${invs.map(i => `<div class="inv"><div><div class="ref">${esc({ deposit: "Deposit", balance: "Balance", full: "Full payment" }[i.kind] || i.kind)} · ${esc(i.ref)}</div><strong class="num">${hk(i.amount)}</strong>
+            <div style="margin-top:4px">${i.status === "paid" ? `<span class="badge go">Paid ${i.paid_at ? day(i.paid_at) : ""}${i.paid_method ? " · " + esc(i.paid_method) : ""}</span>` : i.status === "client_says_paid" ? `<span class="badge warn">Client says paid · ${esc(i.paid_method || "")}${i.paid_reference ? " · " + esc(i.paid_reference) : ""}</span>` : i.status === "cancelled" ? `<span class="badge">Cancelled</span>` : `<span class="badge">Sent ${day(i.created_at)}${i.due_date ? " · due " + day(i.due_date) : ""}</span>`}</div></div>
+          <div class="acts">${["sent", "client_says_paid"].includes(i.status) ? `<button type="button" data-paid="${esc(i.id)}">${i.status === "client_says_paid" ? "Confirm received" : "Mark paid"}</button><button type="button" data-cancel="${esc(i.id)}">Cancel</button>` : ""}</div></div>`).join("") || `<p class="muted" style="font-size:13.5px;margin:0">No payment requests yet.</p>`}
+        <h3 style="margin-top:18px">Request a payment</h3>
+        <div class="kind" id="kind">${["deposit", "balance", "full"].map(k => `<button type="button" data-kind="${k}" aria-pressed="${k === suggestKind}">${ICON[k]}${{ deposit: "Deposit", balance: "Balance", full: "Full" }[k]}</button>`).join("")}</div>
+        <div class="fields" style="margin-top:10px">
+          <div><label for="amt">Amount HK$</label><input id="amt" type="number" step="100" class="num" value="${suggestAmt || ""}"></div>
+          <div><label for="due">Due date</label><input id="due" type="date"></div>
+        </div>
+        <div style="margin-top:10px"><label for="payme">PayMe link for this amount (optional)</label><input id="payme" type="url" placeholder="Paste from the PayMe for Business app"></div>
+        <div style="margin-top:10px"><label for="pnote">Note to client (optional)</label><input id="pnote" maxlength="300"></div>
+        <p class="muted" style="font-size:12.5px;margin:8px 0 0">The client gets an email with an FPS QR code, PayMe and PayPal buttons, and it appears on their account page.</p>
+        <p style="margin:12px 0 0"><button type="button" class="primary" id="req">Send payment request</button></p>
+        <div id="qrprev"></div>
+      </div>
+      <div class="card">
+        <h3>Private notes · only you see these</h3>
+        <ul class="notes">${notes.map(n => `<li>${esc(n.note)}<time>${fmt(n.created_at)}</time></li>`).join("")}</ul>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px"><input id="note" placeholder="Ring size confirmed, stone preferences…"><button type="button" id="addnote">Add</button></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderAll() {
+  const o = ORDERS.find(x => x.id === sel);
+  $("app").innerHTML = `${DEMO ? `<div class="demo">Demo CRM with sample clients — nothing here is saved or emailed.${PA.enabled ? "" : " Sign-in isn't set up on this site yet (see README)."}</div>` : ""}
+    ${renderStats()}<div class="crm ${o ? "open" : ""}"><div class="list" id="list">${listHTML()}</div><div class="detail" id="detail">${detailHTML(o)}</div></div>`;
+  wire(o);
+}
+function wire(o) {
+  document.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f; renderAll(); });
+  const qi = $("q"); if (qi) qi.oninput = () => { q = qi.value.trim().toLowerCase(); $("list").innerHTML = listHTML(); wire(o); const n = $("q"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); };
+  document.querySelectorAll("[data-id]").forEach(b => b.onclick = () => { sel = b.dataset.id; history.replaceState(null, "", "#" + sel); renderAll(); window.scrollTo({ top: 0 }); });
+  if (!o) return;
+  $("back").onclick = () => { sel = null; history.replaceState(null, "", location.pathname + location.search); renderAll(); };
+  let stage = o.stage, kind = document.querySelector("#kind [aria-pressed=true]")?.dataset.kind || "balance";
+  const tpl = () => { $("tpl").innerHTML = (TEMPLATES[stage] || []).map((t, i) => `<button type="button" data-t="${i}">${esc(t.length > 42 ? t.slice(0, 40) + "…" : t)}</button>`).join(""); $("tpl").querySelectorAll("[data-t]").forEach(b => b.onclick = () => $("msg").value = TEMPLATES[stage][+b.dataset.t]); };
+  tpl();
+  document.querySelectorAll("[data-stage]").forEach(b => b.onclick = () => { stage = b.dataset.stage; document.querySelectorAll("[data-stage]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); tpl(); if (!$("msg").value) $("msg").value = (TEMPLATES[stage] || [""])[0]; });
+  document.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => { kind = b.dataset.kind; document.querySelectorAll("[data-kind]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+  if ($("pdf")) $("pdf").onclick = async (e) => { e.preventDefault(); if (DEMO) return toast("In the live CRM this opens the client's PDF"); const w = window.open("", "_blank"); const url = await act.pdf(o); if (url && w) w.location.href = url; else { if (w) w.close(); toast("No PDF for this order"); } };
+  if ($("wo-pdf")) $("wo-pdf").onclick = async (e) => { e.preventDefault(); if (DEMO) return toast("In the live CRM this opens the work order to cost the piece"); const w = window.open("", "_blank"); const url = await act.pdf(o, "work_order_path"); if (url && w) w.location.href = url; else { if (w) w.close(); toast("No work order for this order"); } };
+  $("save").onclick = async () => {
+    const btn = $("save"); btn.disabled = true;
+    try {
+      const r = await act.update(o, { stage: stage !== o.stage ? stage : undefined, message: $("msg").value.trim(), notify: $("notify").checked, finalPrice: $("final").value || undefined });
+      toast(r && r.emailed ? "Saved · client emailed" : "Saved");
+      await refresh();
+    } catch (e) { console.error(e); toast("Couldn't save — " + (e.code || "try again")); btn.disabled = false; }
+  };
+  $("req").onclick = async () => {
+    const amount = +$("amt").value; if (!(amount > 0)) return toast("Enter an amount");
+    const btn = $("req"); btn.disabled = true;
+    try {
+      const r = await act.requestPayment(o, { kind, amount, dueDate: $("due").value || undefined, paymeUrl: $("payme").value.trim() || undefined, note: $("pnote").value.trim() || undefined });
+      toast(r.emailed ? "Payment request emailed" : "Payment request saved");
+      await refresh();
+      const inv = r.invoice;
+      if (inv && inv.fps_payload) { const qr = qrcode(0, "M"); qr.addData(inv.fps_payload); qr.make();
+        $("qrprev").innerHTML = `<div class="qrprev"><div class="qr">${qr.createSvgTag({ cellSize: 3, margin: 0, scalable: true })}</div><div style="font-size:13px"><b>${esc(inv.ref)}</b> · ${hk(inv.amount)}<br><span class="muted">FPS QR the client sees. Scan it with your own banking app to check it opens with the right name and amount.</span></div></div>`; }
+    } catch (e) { console.error(e); toast("Couldn't send — " + (e.code || "try again")); btn.disabled = false; }
+  };
+  document.querySelectorAll("[data-paid]").forEach(b => b.onclick = async () => {
+    const inv = o.invoices.find(i => i.id === b.dataset.paid); b.disabled = true;
+    try { await act.markPaid(o, inv); toast("Marked paid");
+      const allPaid = o.final_price && paidOf(o) >= +o.final_price;
+      if (allPaid && o.stage !== "paid" && confirm("Everything is paid. Move this order to “Paid in full” and thank the client?")) await act.update(o, { stage: "paid", message: TEMPLATES.paid[0], notify: true });
+      await refresh();
+    } catch (e) { console.error(e); toast("Couldn't update"); b.disabled = false; }
+  });
+  document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = async () => { const inv = o.invoices.find(i => i.id === b.dataset.cancel); try { await act.cancelInvoice(o, inv); toast("Request cancelled"); await refresh(); } catch (_) { toast("Couldn't cancel"); } });
+  $("addnote").onclick = async () => { const n = $("note").value.trim(); if (!n) return; try { await act.addNote(o, n); await refresh(); } catch (_) { toast("Couldn't save note"); } };
+}
+async function refresh() { try { await load(); } catch (e) { console.error(e); } renderAll(); }
+
+async function start() {
+  if (DEMO) { $("me").innerHTML = `<span class="av">A</span><span>Annie (demo)</span>`; await load(); sel = location.hash.slice(1) || null; renderAll(); return; }
+  const u = await PA.user();
+  if (!u) {
+    $("app").innerHTML = `<div class="card" style="max-width:420px;margin:40px auto;text-align:center"><h1 style="font-size:28px">Annie's CRM</h1><p class="muted">Sign in with the Google account listed as an admin.</p><button type="button" id="g" style="display:inline-flex;gap:10px;align-items:center">${PA.GOOGLE_SVG}Continue with Google</button></div>`;
+    $("g").onclick = () => PA.signIn(location.href.split("#")[0]); return;
+  }
+  $("me").innerHTML = `<span class="av">${u.avatar ? `<img src="${esc(u.avatar)}" alt="" referrerpolicy="no-referrer">` : esc(PA.initials(u.name))}</span><button type="button" id="out">Sign out</button>`;
+  $("out").onclick = async () => { await PA.signOut(); location.reload(); };
+  const { data: ok } = await PA.sb.rpc("is_admin");
+  if (!ok) { $("app").innerHTML = `<div class="card" style="margin-top:20px">${esc(u.email)} isn't an admin. Add it to the <code>admins</code> table in Supabase (see README), then refresh.</div>`; return; }
+  try { await load(); } catch (e) { console.error(e); $("app").innerHTML = `<div class="card" style="margin-top:20px">Couldn't load orders. Check the database setup in the README.</div>`; return; }
+  sel = location.hash.slice(1) || null;
+  renderAll();
+}
+start();
+</script>
+</body>
+</html>
